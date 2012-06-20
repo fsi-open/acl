@@ -16,9 +16,9 @@ class ResourceSimple implements ResourceInterface
     public static function factory($id)
     {
         $id = (string)$id;
-        if (!isset(self::$resources[$id])) {
-            self::$resources[$id] = new self($id);
+        if (!isset(static::$resources[$id])) {
+            static::$resources[$id] = new static($id);
         }
-        return self::$resources[$id];
+        return static::$resources[$id];
     }
 }

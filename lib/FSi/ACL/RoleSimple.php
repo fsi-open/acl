@@ -16,9 +16,9 @@ class RoleSimple implements RoleInterface
     public static function factory($id)
     {
         $id = (string)$id;
-        if (!isset(self::$roles[$id])) {
-            self::$roles[$id] = new self($id);
+        if (!isset(static::$roles[$id])) {
+            static::$roles[$id] = new static($id);
         }
-        return self::$roles[$id];
+        return static::$roles[$id];
     }
 }

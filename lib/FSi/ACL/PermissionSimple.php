@@ -16,9 +16,9 @@ class PermissionSimple implements PermissionInterface
     public static function factory($id)
     {
         $id = (string)$id;
-        if (!isset(self::$permissions[$id])) {
-            self::$permissions[$id] = new self($id);
+        if (!isset(static::$permissions[$id])) {
+            static::$permissions[$id] = new static($id);
         }
-        return self::$permissions[$id];
+        return static::$permissions[$id];
     }
 }

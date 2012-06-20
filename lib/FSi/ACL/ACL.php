@@ -20,76 +20,291 @@ class ACL
 
     public function addPermission(PermissionInterface $permission)
     {
-        if (in_array($permission, $this->permissions, true))
-            throw new ACLException('Specified permission is already registered.');
         $permissionId = spl_object_hash($permission);
+        if (isset($this->permissions[$permissionId]))
+            throw new ACLException('Specified permission is already registered.');
         $this->permissions[$permissionId] = $permission;
         return $this;
     }
 
-    public function addRole(RoleInterface $role, array $parentRoles = array())
+    public function removePermission(PermissionInterface $permission)
     {
-        if (in_array($role, $this->roles, true))
-            throw new ACLException('Specified role is already registered.');
-        $roleId = spl_object_hash($role);
-        $this->roles[$roleId] = $role;
-        foreach ($parentRoles as $parentRole)
-            $this->addParentRole($role, $parentRole);
+        $permissionId = spl_object_hash($permission);
+        if (isset($this->permissions[$permissionId])) {
+            unset($this->permissions[$permissionId]);
+            foreach ($this->ACEs as $roleId => &$roleACEs)
+                foreach ($roleACEs as $resourceId => &$resourceACEs)
+                    unset($resourceACEs[$permissionId]);
+        }
         return $this;
     }
 
-    protected function addParentRole(RoleInterface $role, RoleInterface $parentRole)
+    public function hasPermission(PermissionInterface $permission)
+    {
+        $permissionId = spl_object_hash($permission);
+        return isset($this->permissions[$permissionId]);
+    }
+
+    public function addRole(RoleInterface $role, array $parentRoles = array())
     {
         $roleId = spl_object_hash($role);
-        $this->checkRoleRegistered($parentRole);
+        if (isset($this->roles[$roleId]))
+            throw new ACLException('Specified role is already registered.');
+        $this->roles[$roleId] = $role;
+        foreach ($parentRoles as $parentRole) {
+            $parentRoleId = spl_object_hash($parentRole);
+            if (!isset($this->roles[$parentRoleId]))
+                throw new ACLException('Detected unregistered role throught inheritance.');
+            $this->rolesParents[$roleId][$parentRoleId] = $parentRole;
+        }
+        return $this;
+    }
+
+    public function removeRole(RoleInterface $role)
+    {
+        $roleId = spl_object_hash($role);
+        if (isset($this->roles[$roleId])) {
+            unset($this->roles[$roleId]);
+            unset($this->rolesParents[$roleId]);
+            unset($this->ACEs[$roleId]);
+        }
+        return $this;
+    }
+
+    public function hasRole(RoleInterface $role)
+    {
+        $roleId = spl_object_hash($role);
+        return isset($this->roles[$roleId]);
+    }
+
+    public function addRoleParent(RoleInterface $role, RoleInterface $parentRole)
+    {
+        $roleId = spl_object_hash($role);
         $parentRoleId = spl_object_hash($parentRole);
+        if (!isset($this->roles[$roleId]) || !isset($this->roles[$parentRoleId]))
+            throw new ACLException('Detected unregistered role throught inheritance.');
         $this->rolesParents[$roleId][$parentRoleId] = $parentRole;
+        return $this;
+    }
+
+    public function removeRoleParent(RoleInterface $role, RoleInterface $parentRole)
+    {
+        $roleId = spl_object_hash($role);
+        $parentRoleId = spl_object_hash($parentRole);
+        unset($this->rolesParents[$roleId][$parentRoleId]);
+        return $this;
+    }
+
+    public function removeRoleParents(RoleInterface $role)
+    {
+        $roleId = spl_object_hash($role);
+        unset($this->rolesParents[$roleId]);
+        return $this;
+    }
+
+    public function hasRoleParent(RoleInterface $role, RoleInterface $parentRole)
+    {
+        $roleId = spl_object_hash($role);
+        $parentRoleId = spl_object_hash($parentRole);
+        return isset($this->rolesParents[$roleId][$parentRoleId]);
+    }
+
+    public function getRoleParents(RoleInterface $role)
+    {
+        $roleId = spl_object_hash($role);
+        if (isset($this->rolesParents[$roleId]))
+            return array_values($this->rolesParents[$roleId]);
+        else
+            return array();
+    }
+
+    public function getRoleChildren(RoleInterface $parentRole)
+    {
+        $parentRoleId = spl_object_hash($parentRole);
+        $childrenRoles = array();
+        foreach ($this->rolesParents as $roleId => $parentRoles)
+            if (isset($parentRoles[$parentRoleId]))
+                $childrenRoles[] = $this->roles[$roleId];
+        return $childrenRoles;
+    }
+
+    public function getRolesByClass($className)
+    {
+        $roles = array();
+        foreach ($this->roles as $roleId => $role)
+            if (get_class($role) == $className)
+                $roles[] = $role;
+        return $roles;
     }
 
     public function addResource(ResourceInterface $resource, array $parentResources = array())
     {
-        if (in_array($resource, $this->resources, true))
-            throw new ACLException('Specified resource is already registered.');
         $resourceId = spl_object_hash($resource);
+        if (isset($this->resources[$resourceId]))
+            throw new ACLException('Specified resource is already registered.');
         $this->resources[$resourceId] = $resource;
-        foreach ($parentResources as $parentResource)
-            $this->addParentResource($resource, $parentResource);
+        foreach ($parentResources as $parentResource) {
+            $parentResourceId = spl_object_hash($parentResource);
+            if (!isset($this->resources[$parentResourceId]))
+                throw new ACLException('Detected unregistered resource throught inheritance.');
+            $this->resourcesParents[$resourceId][$parentResourceId] = $parentResource;
+        }
         return $this;
     }
 
-    protected function addParentResource(ResourceInterface $resource, ResourceInterface $parentResource)
+    public function removeResource(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
-        $this->checkResourceRegistered($parentResource);
+        if (isset($this->resources[$resourceId])) {
+            unset($this->resources[$resourceId]);
+            unset($this->resourcesParents[$resourceId]);
+            foreach ($this->ACEs as $roleId => &$roleACEs)
+                unset($roleACEs[$permissionId]);
+        }
+        return $this;
+    }
+
+    public function hasResource(ResourceInterface $resource)
+    {
+        $resourceId = spl_object_hash($resource);
+        return isset($this->resources[$resourceId]);
+    }
+
+    public function addResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
+    {
+        $resourceId = spl_object_hash($resource);
         $parentResourceId = spl_object_hash($parentResource);
+        if (!isset($this->resources[$resourceId]) || !isset($this->resources[$parentResourceId]))
+            throw new ACLException('Detected unregistered resource throught inheritance.');
         $this->resourcesParents[$resourceId][$parentResourceId] = $parentResource;
         return $this;
+    }
+
+    public function removeResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
+    {
+        $resourceId = spl_object_hash($resource);
+        $parentResourceId = spl_object_hash($parentResource);
+        unset($this->resourcesParents[$resourceId][$parentResourceId]);
+        return $this;
+    }
+
+    public function removeResourceParents(ResourceInterface $resource)
+    {
+        $resourceId = spl_object_hash($resource);
+        unset($this->resourcesParents[$resourceId]);
+        return $this;
+    }
+
+    public function hasResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
+    {
+        $resourceId = spl_object_hash($resource);
+        $parentResourceId = spl_object_hash($parentResource);
+        return isset($this->resourcesParents[$resourceId][$parentResourceId]);
+    }
+
+    public function getResourceParents(ResourceInterface $resource)
+    {
+        $resourceId = spl_object_hash($resource);
+        if (isset($this->resourcesParents[$resourceId]))
+            return array_values($this->resourcesParents[$resourceId]);
+        else
+            return array();
+    }
+
+    public function getResourceChildren(ResourceInterface $parentResource)
+    {
+        $parentResourceId = spl_object_hash($parentResource);
+        $childrenResources = array();
+        foreach ($this->resourcesParents as $resourceId => $parentResources)
+            if (isset($parentResources[$parentResourceId]))
+                $childrenResource[] = $this->resource[$resourceId];
+        return $childrenResource;
+    }
+
+    public function getResourcesByClass($className)
+    {
+        $resources = array();
+        foreach ($this->resources as $resourceId => $resource)
+            if (get_class($resource) == $className)
+                $resources[] = $resource;
+        return $resources;
     }
 
     public function addACE(ACEInterface $ace)
     {
         $role = $ace->getRole();
         $resource = $ace->getResource();
-        $permission = $ace->getPermission();
-        $this->checkRoleRegistered($role);
-        $this->checkResourceRegistered($resource);
-        $this->checkPermissionRegistered($permission);
-        if (in_array($ace, $this->ACEs, true))
-            throw new ACLException('Specified ACE is already registered');
+        $permissions = $ace->getPermissions();
+        if (!isset($role) || !isset($resource) || !isset($permissions) || empty($permissions))
+            throw new ACLException('Specified ACE is not fully configured');
         $roleId = spl_object_hash($role);
+        if (!isset($this->roles[$roleId]))
+            throw new ACLException('Detected unregistered role throught ACE');
         $resourceId = spl_object_hash($resource);
-        $permissionId = spl_object_hash($permission);
+        if (!isset($this->resources[$resourceId]))
+            throw new ACLException('Detected unregistered resource throught ACE.');
         if (!isset($this->ACEs[$roleId]))
             $this->ACEs[$roleId] = array();
         if (!isset($this->ACEs[$roleId][$resourceId]))
             $this->ACEs[$roleId][$resourceId] = array();
-        if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
-            $this->ACEs[$roleId][$resourceId][$permissionId] = array();
-        $aceId = spl_object_hash($ace);
-        $this->ACEs[$roleId][$resourceId][$permissionId][$aceId] = $ace;
+        foreach ($permissions as $permission) {
+            $permissionId = spl_object_hash($permission);
+            if (!isset($this->permissions[$permissionId]))
+                throw new ACLException('Detected unregistered permission throught ACE.');
+            $aceId = spl_object_hash($ace);
+            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]))
+                throw new ACLException('Specified ACE is already registered');
+            if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
+                $this->ACEs[$roleId][$resourceId][$permissionId] = array();
+            $this->ACEs[$roleId][$resourceId][$permissionId][$aceId] = $ace;
+        }
         return $this;
     }
 
+    public function removeACE(ACEInterface $ace)
+    {
+        $role = $ace->getRole();
+        $resource = $ace->getResource();
+        $permissions = $ace->getPermissions();
+        $roleId = spl_object_hash($role);
+        $resourceId = spl_object_hash($resource);
+        $aceId = spl_object_hash($ace);
+        foreach ($permissions as $permission) {
+            $permissionId = spl_object_hash($permission);
+            unset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]);
+        }
+        return $this;
+    }
+
+    public function hasACE(ACEInterface $ace)
+    {
+        $role = $ace->getRole();
+        $resource = $ace->getResource();
+        $permissions = $ace->getPermissions();
+        $roleId = spl_object_hash($role);
+        $resourceId = spl_object_hash($resource);
+        foreach ($permissions as $permission) {
+            $permissionId = spl_object_hash($permission);
+            $aceId = spl_object_hash($ace);
+            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check access right to the specified permission of the specified resource for the specified role.
+     *
+     * This method searches ACEs directly associated with specified params. If this gives no results (grant or revoke), then it
+     * searches ACEs up in the hierarchy tree of resources starting from the specified one. If again this gives no results, then
+     * it searches ACEs up in the hierarchy of roles starting from specified one. If none results are found then false is
+     * returned so the access is revoked.
+     *
+     * @param RoleInterface $role
+     * @param ResourceInterface $resource
+     * @param PermissionInterface $permission
+     * @return bool
+     */
     public function isAllowed(RoleInterface $role, ResourceInterface $resource, PermissionInterface $permission)
     {
         $roleId = spl_object_hash($role);
@@ -105,6 +320,18 @@ class ACL
         return false;
     }
 
+    /**
+     * Search ACEs associated with parent roles of specified role for pemissions granted to the specified resource.
+     *
+     * If any of the parent roles has explicitly revoked access right to the specified resource then this method returns false.
+     * If any of parent roles has explicitly granted access right to the specified resource and none of them has it revoked then
+     * this method returns true. Otherwise this method returns null.
+     *
+     * @param string $roleId
+     * @param string $resourceId
+     * @param string $permissionId
+     * @return bool|null
+     */
     protected function searchParentRoleACEs($roleId, $resourceId, $permissionId)
     {
         $allowedAny = null;
@@ -126,6 +353,18 @@ class ACL
         return $allowedAny;
     }
 
+    /**
+     * Search ACEs associated with parent resources of specified resource for pemissions granted for the specified role.
+     *
+     * If specified role has explicitly revoked access right to any of the parent resources then this method returns false.
+     * If specified role has explicitly granted access right to any of the parent resources and has not revoked access girht to
+     * any of them, then this method returns true. Otherwise this method returns null.
+     *
+     * @param string $roleId
+     * @param string $resourceId
+     * @param string $permissionId
+     * @return bool|null
+     */
     protected function searchParentResourceACEs($roleId, $resourceId, $permissionId)
     {
         $allowedAny = null;
@@ -145,6 +384,17 @@ class ACL
         return $allowedAny;
     }
 
+    /**
+     * Search ACEs associated with specified role, resource and permission.
+     *
+     * This method returns true or false only if specified role has directly granted or revoked specified permission to specified
+     * resource. Otherwise it returns null.
+     *
+     * @param string $roleId
+     * @param string $resourceId
+     * @param string $permissionId
+     * @return bool|null
+     */
     protected function searchACEs($roleId, $resourceId, $permissionId)
     {
 /*        echo '-----'."\n";
@@ -161,21 +411,4 @@ class ACL
         }
     }
 
-    protected function checkRoleRegistered(RoleInterface $role)
-    {
-        if (!in_array($role, $this->roles, true))
-            throw new ACLException('Detected unregistered role throught relationship.');
-    }
-
-    protected function checkResourceRegistered(ResourceInterface $resource)
-    {
-        if (!in_array($resource, $this->resources, true))
-            throw new ACLException('Detected unregistered resource throught relationship.');
-    }
-
-    protected function checkPermissionRegistered(PermissionInterface $permission)
-    {
-        if (!in_array($permission, $this->permissions, true))
-            throw new ACLException('Detected unregistered permission throught relationship.');
-    }
 }
