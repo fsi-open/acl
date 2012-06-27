@@ -33,6 +33,6 @@ $loader->registerNamespaces(array(
     // imported namespaces
     'Symfony'                    => VENDOR_PATH,
     // FSi namespaces
-	'FSi\\ACL'            => __DIR__.'/../lib',
+	'FSi\\Component\\ACL'            => __DIR__.'/../lib',
 ));
 $loader->register();

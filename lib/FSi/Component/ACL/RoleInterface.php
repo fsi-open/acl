@@ -1,6 +1,6 @@
 <?php
 
-namespace FSi\ACL;
+namespace FSi\Component\ACL;
 
 interface RoleInterface
 {

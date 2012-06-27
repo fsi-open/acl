@@ -1,6 +1,6 @@
 <?php
 
-namespace FSi\ACL;
+namespace FSi\Component\ACL;
 
 use FSi\DoctrineExtensions\Securable\Mapping\Annotation\Resource;
 
