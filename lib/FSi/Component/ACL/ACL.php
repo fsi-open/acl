@@ -2,8 +2,6 @@
 
 namespace FSi\Component\ACL;
 
-use FSi\DoctrineExtensions\Securable\Mapping\Annotation\Resource;
-
 class ACL
 {
     protected $resources = array();
