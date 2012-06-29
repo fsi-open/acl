@@ -4,7 +4,7 @@ namespace FSi\Component\ACL;
 
 //use FSi\Reflection\Fixture\ClassA;
 
-class SampleTest extends \PHPUnit_Framework_TestCase
+class SimpleTest extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {

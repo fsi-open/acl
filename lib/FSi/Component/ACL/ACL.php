@@ -157,7 +157,7 @@ class ACL
             unset($this->resources[$resourceId]);
             unset($this->resourcesParents[$resourceId]);
             foreach ($this->ACEs as $roleId => &$roleACEs)
-                unset($roleACEs[$permissionId]);
+                unset($roleACEs[$resourceId]);
         }
         return $this;
     }
