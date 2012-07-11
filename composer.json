@@ -1,6 +1,6 @@
 {
     "repositories": [ { "type": "composer", "url": "http://git.fsi.pl/" } ],
-    "name": "fsi/cache",
+    "name": "fsi/acl",
     "type": "library",
     "description": "FSi ACL Component",
     "keywords": ["fsi", "component", "acl"],
