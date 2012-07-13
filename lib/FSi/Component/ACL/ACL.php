@@ -254,6 +254,9 @@ class ACL
                 throw new ACLException('Specified ACE is already registered');
             if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
                 $this->ACEs[$roleId][$resourceId][$permissionId] = array();
+            foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $existingACE)
+                if ($existingACE == $ace)
+                    continue 2;
             $this->ACEs[$roleId][$resourceId][$permissionId][$aceId] = $ace;
         }
         return $this;
