@@ -281,9 +281,9 @@ class ACL
         $permissions = $ace->getPermissions();
         $roleId = spl_object_hash($role);
         $resourceId = spl_object_hash($resource);
+        $aceId = spl_object_hash($ace);
         foreach ($permissions as $permission) {
             $permissionId = spl_object_hash($permission);
-            $aceId = spl_object_hash($ace);
             if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]))
                 return true;
         }
