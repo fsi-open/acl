@@ -10,6 +10,8 @@ abstract class ACEAbstract implements ACEInterface
 
     protected $_permissions = array();
 
+    protected $_options;
+
     public function __construct(RoleInterface $role = null, ResourceInterface $resource = null, $permissions = null)
     {
         if (isset($role))
@@ -45,6 +47,11 @@ abstract class ACEAbstract implements ACEInterface
         return $this;
     }
 
+    public function setOptions(array $options = array())
+    {
+        $this->_options = $options;
+    }
+
     public function getRole()
     {
         return $this->_role;
@@ -58,5 +65,10 @@ abstract class ACEAbstract implements ACEInterface
     public function getPermissions()
     {
         return $this->_permissions;
+    }
+
+    public function getOptions()
+    {
+        return $this->_options;
     }
 }

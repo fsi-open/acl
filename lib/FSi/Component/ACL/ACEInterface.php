@@ -26,6 +26,13 @@ interface ACEInterface
     public function setPermissions($permissions);
 
     /**
+     * Set additional options
+     *
+     * @param array $options
+     */
+    public function setOptions(array $options);
+
+    /**
      * Get role which this ACE is assinged to
      *
      * @return RoleInterface
@@ -47,9 +54,17 @@ interface ACEInterface
     public function getPermissions();
 
     /**
+     * Get additional options
+     *
+     * @return array
+     */
+    public function getOptions();
+
+    /**
      * Return true if assigned permissions to the assigned resource are granted for assigned role or false otherwise
      *
+     * @param array $params
      * @return bool
      */
-    public function isAllowed();
+    public function isAllowed(array $params = array());
 }
