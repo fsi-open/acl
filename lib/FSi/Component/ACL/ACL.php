@@ -358,7 +358,7 @@ class ACL
      * Search ACEs associated with parent resources of specified resource for pemissions granted for the specified role.
      *
      * If specified role has explicitly revoked access right to any of the parent resources then this method returns false.
-     * If specified role has explicitly granted access right to any of the parent resources and has not revoked access girht to
+     * If specified role has explicitly granted access right to any of the parent resources and has not revoked access right to
      * any of them, then this method returns true. Otherwise this method returns null.
      *
      * @param string $roleId

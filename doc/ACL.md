@@ -23,15 +23,16 @@ the library should look like this:
         /doc
         /lib
             /FSi
-                /ACL
-                    ...
+                /Component
+                    /ACL
+                        ...
         /tests
             ...
     ...
 
 First of all we need to setup the autoloading of required extensions:
 
-    $classLoader = new \Doctrine\Common\ClassLoader('FSi\\ACL', "/path/to/library/ACL/lib");
+    $classLoader = new \Doctrine\Common\ClassLoader('FSi\\Component\\ACL', "/path/to/library/ACL/lib");
     $classLoader->register();
 
 Then create ACL object, add resources, permissions, etc.
