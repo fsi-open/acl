@@ -304,18 +304,19 @@ class ACL
      * @param RoleInterface $role
      * @param ResourceInterface $resource
      * @param PermissionInterface $permission
+     * @param array $params
      * @return bool
      */
-    public function isAllowed(RoleInterface $role, ResourceInterface $resource, PermissionInterface $permission)
+    public function isAllowed(RoleInterface $role, ResourceInterface $resource, PermissionInterface $permission, array $params = array())
     {
         $roleId = spl_object_hash($role);
         $resourceId = spl_object_hash($resource);
         $permissionId = spl_object_hash($permission);
-        $allowed = $this->searchACEs($roleId, $resourceId, $permissionId);
+        $allowed = $this->searchACEs($roleId, $resourceId, $permissionId, $params);
         if (!isset($allowed))
-            $allowed = $this->searchParentResourceACEs($roleId, $resourceId, $permissionId);
+            $allowed = $this->searchParentResourceACEs($roleId, $resourceId, $permissionId, $params);
         if (!isset($allowed))
-            $allowed = $this->searchParentRoleACEs($roleId, $resourceId, $permissionId);
+            $allowed = $this->searchParentRoleACEs($roleId, $resourceId, $permissionId, $params);
         if (isset($allowed))
             return $allowed;
         return false;
@@ -331,18 +332,19 @@ class ACL
      * @param string $roleId
      * @param string $resourceId
      * @param string $permissionId
+     * @param array $params
      * @return bool|null
      */
-    protected function searchParentRoleACEs($roleId, $resourceId, $permissionId)
+    protected function searchParentRoleACEs($roleId, $resourceId, $permissionId, array $params = array())
     {
         $allowedAny = null;
         if (isset($this->rolesParents[$roleId])) {
             foreach ($this->rolesParents[$roleId] as $parentRoleId => $parentRole) {
-                $allowed = $this->searchACEs($parentRoleId, $resourceId, $permissionId);
+                $allowed = $this->searchACEs($parentRoleId, $resourceId, $permissionId, $params);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentResourceACEs($parentRoleId, $resourceId, $permissionId);
+                    $allowed = $this->searchParentResourceACEs($parentRoleId, $resourceId, $permissionId, $params);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentRoleACEs($parentRoleId, $resourceId, $permissionId);
+                    $allowed = $this->searchParentRoleACEs($parentRoleId, $resourceId, $permissionId, $params);
                 if (isset($allowed)) {
                     if (!$allowed)
                         return $allowed;
@@ -364,16 +366,17 @@ class ACL
      * @param string $roleId
      * @param string $resourceId
      * @param string $permissionId
+     * @param array $params
      * @return bool|null
      */
-    protected function searchParentResourceACEs($roleId, $resourceId, $permissionId)
+    protected function searchParentResourceACEs($roleId, $resourceId, $permissionId, array $params = array())
     {
         $allowedAny = null;
         if (isset($this->resourcesParents[$resourceId])) {
             foreach ($this->resourcesParents[$resourceId] as $parentResourceId => $parentResource) {
-                $allowed = $this->searchACEs($roleId, $parentResourceId, $permissionId);
+                $allowed = $this->searchACEs($roleId, $parentResourceId, $permissionId, $params);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentResourceACEs($roleId, $parentResourceId, $permissionId);
+                    $allowed = $this->searchParentResourceACEs($roleId, $parentResourceId, $permissionId, $params);
                 if (isset($allowed)) {
                     if (!$allowed)
                         return $allowed;
@@ -394,9 +397,10 @@ class ACL
      * @param string $roleId
      * @param string $resourceId
      * @param string $permissionId
+     * @param array $params
      * @return bool|null
      */
-    protected function searchACEs($roleId, $resourceId, $permissionId)
+    protected function searchACEs($roleId, $resourceId, $permissionId, array $params = array())
     {
 /*        echo '-----'."\n";
         var_dump($this->roles[$roleId]);
@@ -405,10 +409,17 @@ class ACL
         if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
             return null;
         else {
-            foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $ace)
-                if (!$ace->isAllowed())
-                    return false;
-            return true;
+            $allowedAny = null;
+            foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $ace) {
+                $allowed = $ace->isAllowed($params);
+                if (isset($allowed)) {
+                    if (!$allowed)
+                        return false;
+                    else
+                        $allowedAny = true;
+                }
+            }
+            return $allowedAny;
         }
     }
 
