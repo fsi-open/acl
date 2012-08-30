@@ -21,4 +21,9 @@ class PermissionSimple implements PermissionInterface
         }
         return static::$permissions[$id];
     }
+
+    public function __toString()
+    {
+        return $this->id;
+    }
 }

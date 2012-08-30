@@ -21,4 +21,9 @@ class RoleSimple implements RoleInterface
         }
         return static::$roles[$id];
     }
+
+    public function __toString()
+    {
+        return $this->id;
+    }
 }

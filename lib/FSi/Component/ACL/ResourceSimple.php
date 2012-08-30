@@ -21,4 +21,9 @@ class ResourceSimple implements ResourceInterface
         }
         return static::$resources[$id];
     }
+
+    public function __toString()
+    {
+        return $this->id;
+    }
 }

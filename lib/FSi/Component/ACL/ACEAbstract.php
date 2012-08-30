@@ -71,4 +71,9 @@ abstract class ACEAbstract implements ACEInterface
     {
         return $this->_options;
     }
+
+    public function __toString()
+    {
+        return get_class($this);
+    }
 }
