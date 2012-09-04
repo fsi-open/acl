@@ -2,7 +2,7 @@
 
 namespace FSi\Component\ACL;
 
-class ACL
+class ACL implements ACLInterface
 {
     protected $resources = array();
 
