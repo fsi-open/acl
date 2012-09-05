@@ -2,10 +2,17 @@
 
 namespace FSi\Component\ACL;
 
-//use FSi\Reflection\Fixture\ClassA;
-
 class SimpleTest extends \PHPUnit_Framework_TestCase
 {
+    protected function getACL()
+    {
+        $acl = new ACL();
+        $logger = new \Monolog\Logger('ACL');
+        $logger->pushHandler(new \Monolog\Handler\SyslogHandler('ACL Tests'));
+        $acl->setLogger($logger);
+        return $acl;
+    }
+
     public function testSimple()
     {
         $role = RoleSimple::factory('user');
@@ -13,7 +20,7 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
         $view = PermissionSimple::factory('view');
         $edit = PermissionSimple::factory('edit');
 
-        $acl = new ACL();
+        $acl = $this->getACL();
         $acl->addPermission($view);
         $acl->addPermission($edit);
         $acl->addResource($resource);
@@ -43,7 +50,7 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
         $view = PermissionSimple::factory('view');
         $edit = PermissionSimple::factory('edit');
 
-        $acl = new ACL();
+        $acl = $this->getACL();
         $acl->addPermission($view);
         $acl->addPermission($edit);
         $acl->addResource($parentResource);
@@ -81,7 +88,7 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
         $view = PermissionSimple::factory('view');
         $edit = PermissionSimple::factory('edit');
 
-        $acl = new ACL();
+        $acl = $this->getACL();
         $acl->addPermission($view);
         $acl->addPermission($edit);
         $acl->addResource($dependentResource1);
@@ -117,7 +124,7 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
         $edit = PermissionSimple::factory('edit');
         $publish = PermissionSimple::factory('publish');
 
-        $acl = new ACL();
+        $acl = $this->getACL();
         $acl->addPermission($view);
         $acl->addPermission($edit);
         $acl->addPermission($publish);
@@ -155,7 +162,7 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
         $edit = PermissionSimple::factory('edit');
         $publish = PermissionSimple::factory('publish');
 
-        $acl = new ACL();
+        $acl = $this->getACL();
         $acl->addPermission($view);
         $acl->addPermission($edit);
         $acl->addPermission($publish);

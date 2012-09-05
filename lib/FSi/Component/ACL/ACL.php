@@ -2,6 +2,8 @@
 
 namespace FSi\Component\ACL;
 
+use Monolog\Logger;
+
 class ACL implements ACLInterface
 {
     protected $resources = array();
@@ -15,6 +17,11 @@ class ACL implements ACLInterface
     protected $resourcesParents = array();
 
     protected $ACEs = array();
+
+    /**
+     * @var Monolog\Logger
+     */
+    protected $logger;
 
     public function addPermission(PermissionInterface $permission)
     {
@@ -312,14 +319,40 @@ class ACL implements ACLInterface
         $roleId = spl_object_hash($role);
         $resourceId = spl_object_hash($resource);
         $permissionId = spl_object_hash($permission);
-        $allowed = $this->searchACEs($roleId, $resourceId, $permissionId, $params);
+        if (isset($this->logger))
+            $this->logger->addRecord(Logger::INFO, sprintf(" Start checking if role %s (class: %s) has permission %s (class: %s) to resource %s (class: %s)",
+                $role,
+                get_class($role),
+                $permission,
+                get_class($permission),
+                $resource,
+                get_class($resource)
+            ), $params);
+
+        $allowed = $this->searchACEs($roleId, $resourceId, $permissionId, $params, 1);
         if (!isset($allowed))
-            $allowed = $this->searchParentResourceACEs($roleId, $resourceId, $permissionId, $params);
+            $allowed = $this->searchParentResourceACEs($roleId, $resourceId, $permissionId, $params, 1);
         if (!isset($allowed))
-            $allowed = $this->searchParentRoleACEs($roleId, $resourceId, $permissionId, $params);
+            $allowed = $this->searchParentRoleACEs($roleId, $resourceId, $permissionId, $params, 1);
         if (isset($allowed))
             return $allowed;
+        if (isset($this->logger))
+            $this->logger->addRecord(Logger::INFO, sprintf(" Access denied because no ACE has taken any decision",
+                $role,
+                $permission,
+                $resource
+            ));
         return false;
+    }
+
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function getLogger()
+    {
+        return $this->logger;
     }
 
     /**
@@ -335,16 +368,20 @@ class ACL implements ACLInterface
      * @param array $params
      * @return bool|null
      */
-    protected function searchParentRoleACEs($roleId, $resourceId, $permissionId, array $params = array())
+    protected function searchParentRoleACEs($roleId, $resourceId, $permissionId, array $params = array(), $level = 0)
     {
         $allowedAny = null;
-        if (isset($this->rolesParents[$roleId])) {
+        if (isset($this->rolesParents[$roleId]) && isset($this->resources[$resourceId]) && isset($this->permissions[$permissionId])) {
+            if (isset($this->logger))
+                $this->logger->addRecord(Logger::DEBUG, sprintf("%sChecking if any parent role has specified permission to specified resource",
+                    str_repeat('  ', $level)
+                ));
             foreach ($this->rolesParents[$roleId] as $parentRoleId => $parentRole) {
-                $allowed = $this->searchACEs($parentRoleId, $resourceId, $permissionId, $params);
+                $allowed = $this->searchACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentResourceACEs($parentRoleId, $resourceId, $permissionId, $params);
+                    $allowed = $this->searchParentResourceACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentRoleACEs($parentRoleId, $resourceId, $permissionId, $params);
+                    $allowed = $this->searchParentRoleACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
                 if (isset($allowed)) {
                     if (!$allowed)
                         return $allowed;
@@ -369,14 +406,18 @@ class ACL implements ACLInterface
      * @param array $params
      * @return bool|null
      */
-    protected function searchParentResourceACEs($roleId, $resourceId, $permissionId, array $params = array())
+    protected function searchParentResourceACEs($roleId, $resourceId, $permissionId, array $params = array(), $level = 0)
     {
         $allowedAny = null;
-        if (isset($this->resourcesParents[$resourceId])) {
+        if (isset($this->resourcesParents[$resourceId]) && isset($this->roles[$roleId]) && isset($this->permissions[$permissionId])) {
+            if (isset($this->logger))
+                $this->logger->addRecord(Logger::DEBUG, sprintf("%sChecking if specified role has specified permission to any parent resource",
+                    str_repeat('  ', $level)
+                ));
             foreach ($this->resourcesParents[$resourceId] as $parentResourceId => $parentResource) {
-                $allowed = $this->searchACEs($roleId, $parentResourceId, $permissionId, $params);
+                $allowed = $this->searchACEs($roleId, $parentResourceId, $permissionId, $params, $level + 1);
                 if (!isset($allowed))
-                    $allowed = $this->searchParentResourceACEs($roleId, $parentResourceId, $permissionId, $params);
+                    $allowed = $this->searchParentResourceACEs($roleId, $parentResourceId, $permissionId, $params, $level + 1);
                 if (isset($allowed)) {
                     if (!$allowed)
                         return $allowed;
@@ -400,18 +441,27 @@ class ACL implements ACLInterface
      * @param array $params
      * @return bool|null
      */
-    protected function searchACEs($roleId, $resourceId, $permissionId, array $params = array())
+    protected function searchACEs($roleId, $resourceId, $permissionId, array $params = array(), $level = 0)
     {
-/*        echo '-----'."\n";
-        var_dump($this->roles[$roleId]);
-        var_dump($this->resources[$resourceId]);
-        var_dump($this->permissions[$permissionId]);*/
         if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
             return null;
         else {
             $allowedAny = null;
             foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $ace) {
                 $allowed = $ace->isAllowed($params);
+                if (isset($this->logger)) {
+                    $this->logger->addRecord(Logger::INFO, sprintf(" %s%s ACE (class: %s) {resource: %s (class: %s), role: %s (class: %s), permission: %s (class: %s)}",
+                        str_repeat('  ', $level),
+                        isset($allowed)?($allowed?'Access granted by':'Access denied by'):'No decision from',
+                        $ace,
+                        $ace->getResource(),
+                        get_class($ace->getResource()),
+                        $ace->getRole(),
+                        get_class($ace->getRole()),
+                        $this->permissions[$permissionId],
+                        get_class($this->permissions[$permissionId])
+                    ));
+                }
                 if (isset($allowed)) {
                     if (!$allowed)
                         return false;
