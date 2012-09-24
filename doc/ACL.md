@@ -1,16 +1,7 @@
 # ACL - Comprehensive Access Control List system for PHP
 
-**FSi\ACL** is a set of interfaces and classes which allows management of Access Control List in PHP. It's based on resources,
+``FSi\ACL`` is a set of interfaces and classes which allows management of Access Control List in PHP. It's based on resources,
 roles and permissions and can be used to build access control systems of almost any degree complexity.
-
-Content:
-
-- [including extension](#including)
-- [understanding permissions](#permissions)
-- [understanding resources](#resources)
-- [understanding roles](#roles)
-- [understanding ACEs](#entries)
-- [usage examples](#examples)
 
 ## Setup and autoloading {#including}
 
@@ -66,16 +57,16 @@ And finally check access to specific resource:
 
 ## Understanding permissions {#permissions}
 
-Permissions are defined as objects implementing PermissionInterface so virtually every object can act as a permission in the ACL
-system. For simple cases there is a factory class PermissionSimple which represents permissions defined only by an identifier
-unique across the ACL (i.e. 'view', 'edit', 'delete', etc.). Permission objects must be registered in the ACL throught
-addPermission() method before defining any dependencies to them like access control entries.
+Permissions are defined as objects implementing ``PermissionInterface`` so virtually every object can act as a permission in the ACL
+system. For simple cases there is a factory class ``PermissionSimple`` which represents permissions defined only by an identifier
+unique across the ACL (i.e. ``'view'``, ``'edit'``, ``'delete'``, etc.). Permission objects must be registered in the ACL throught
+``addPermission()`` method before defining any dependencies to them like access control entries.
 
 ## Understanding resources {#resources}
 
-Resources are defined as objects implementing ResourceInterface so virtually every object can act as a resource in the ACL
-system. For simple cases there is a factory class ResourceSimple which represents resources defined only by an identifier
-unique across the ACL (i.e. 'news', 'article', 'offer', etc.). Resources can inherit from other resources in a multiple way.
+Resources are defined as objects implementing ``ResourceInterface`` so virtually every object can act as a resource in the ACL
+system. For simple cases there is a factory class ``ResourceSimple`` which represents resources defined only by an identifier
+unique across the ACL (i.e. ``'news'``, ``'article'``, ``'offer'``, etc.). Resources can inherit from other resources in a multiple way.
 For example resource A may inherit from three other resources X, Y and Z. Multiple inheritance is usefull if there is a need
 to have multiple ways to grant access to specific resource, i.e. access to an object can be granted by granting access to its
 class (resource representing this class) or some other object which it's associated with. Simple case is when access to some blog
@@ -85,17 +76,17 @@ permission to any of its parent resources is granted and permission to any of th
 ## Understanding roles {#roles}
 
 Roles are used to aggregate multiple access rights to multiple resources in one place and are defined as objects implementing
-RoleInterface so any object can act as a role in the ACL system. For simple cases there is a factory class RoleSimple which
-represents role defined only by an identifier unique across the ACL (i.e. 'user', 'editor', 'publisher', 'admin', etc.). Roles
-can inherit from other roles in a multiple way. For example role 'editor' can inherit from roles 'newsEditor' and
-'articleEditor'. Role has granted permission to some resource if any of its parent roles has granted acces to this resource and
+``RoleInterface`` so any object can act as a role in the ACL system. For simple cases there is a factory class ``RoleSimple`` which
+represents role defined only by an identifier unique across the ACL (i.e. ``'user'``, ``'editor'``, ``'publisher'``, ``'admin'``, etc.).
+Roles can inherit from other roles in a multiple way. For example role ``'editor'`` can inherit from roles ``'newsEditor'`` and
+``'articleEditor'``. Role has granted permission to some resource if any of its parent roles has granted acces to this resource and
 none of them has this permission revoked.
 
 ## Understanding Access Control Entries {#entries}
 
 Access Control Entry (ACE) are objects determining if specific permission to specific resource is granted for specific role.
-There are two predefined ACE classes ACEAllow and ACEDeny which always returns true and false respectively, but any ACE can
-be created with some complex logic determining when access is granted and when not.
+There are two predefined ACE classes ``ACEAllow`` and ``ACEDeny`` which always returns true and false respectively, but any ACE
+can be created with some complex logic determining when access is granted and when not.
 
 ## usage examples {#examples}
 
@@ -140,3 +131,14 @@ Below is some example of how to use ACL directly:
         $acl->isAllowed($publisherRole, $articleResource, $edit)
         // returns true
 
+## Debugging ACL
+
+Considering complex dependincies between many roles, resources and permissions, it's often hard to trace when and why specific permissions are granted or revoked. In order to make this easier this component has built-in optional logging capabilty which uses Monolog to log every activity that takes place during one call of ``isAllowed()`` method. ``FSi\Component\ACL\ACL`` class has method ``setLogger()`` which takes ``Monolog\Logger`` instance as an argument. When logger is set, then messages will be logged to it at two different levels:
+
+- ``INFO``
+  * start of the checking process when ``isAllowed()`` method is called() 
+  * every called ACE rule is logged along with the decision that the rule returned
+  * end of the process including the final decision that is returned by ``isAllowed()`` method
+- ``DEBUG``
+  * additional information when walking up the resource tree
+  * additional information when walking up the role tree
