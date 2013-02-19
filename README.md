@@ -1,59 +1,59 @@
 # ACL - Comprehensive Access Control List system for PHP #
 
-``FSi\ACL`` is a set of interfaces and classes which allows management of Access Control List in PHP. It's based on resources,
-roles and permissions and can be used to build access control systems of almost any degree complexity.
+FSi ACL component is a set of interfaces and classes which allows management of Access Control List in PHP. It's based on
+resources, roles and permissions and can be used to build access control systems of almost any degree of complexity.
 
-## Setup and autoloading ##
+## Basic usage ##
 
-If you are using the official extension repository, initial directory structure for 
-the library should look like this:
+You must create ACL object, add resources, permissions, etc.
 
-    ...
-    /ACL
-        /bin
-        /doc
-        /lib
-            /FSi
-                /Component
-                    /ACL
-                        ...
-        /tests
-            ...
-    ...
+``` php
+<?php
 
-First of all we need to setup the autoloading of required extensions:
+use FSi\Component\ACL;
 
-    $classLoader = new \Doctrine\Common\ClassLoader('FSi\\Component\\ACL', "/path/to/library/ACL/lib");
-    $classLoader->register();
+$acl = new ACL();
+$acl->addPermission($somePermisssion);
 
-Then create ACL object, add resources, permissions, etc.
+...
 
-    $acl = new FSi\ACL();
-    $acl->addPermission($somePermisssion);
-    
-    ...
-    
-    $acl->addResource($someResource);
-    
-    ...
-    
-    $acl->addRole($someRole);
-    
-    ...
-    
-    $acl->addACE($someACE);
-    
-    ...
-    
+$acl->addResource($someResource);
+
+...
+
+$acl->addRole($someRole);
+
+...
+
+$acl->addACE($someACE);
+
+...
+
+```
 
 And finally check access to specific resource:
 
-    if ($acl->isAllowed($someRole, $someResource, $somePermission)) {
-        
-        ...
-        
-    }
+``` php
+<?php
 
+if ($acl->isAllowed($someRole, $someResource, $somePermission)) {
+    
+    ...
+    
+}
+```
+
+## Setup and autoloading ##
+
+Simply add fsi/acl into composer.json of your project and run ``composer.phar update`` or ``composer.phar install``
+
+``` json
+{
+    "require": {
+        "fsi/acl": "0.9.*"
+    }
+}
+```
 
 ## Understanding permissions ##
 
@@ -92,44 +92,48 @@ can be created with some complex logic determining when access is granted and wh
 
 Below is some example of how to use ACL directly:
 
-        $userRole = RoleSimple::factory('user');
-        $newsEditorRole = RoleSimple::factory('newsEditor');
-        $articleEditorRole = RoleSimple::factory('articleEditor');
-        $publisherRole = RoleSimple::factory('publisher');
-        $newsResource = ResourceSimple::factory('newsClass');
-        $articleResource = ResourceSimple::factory('articleClass');
-        $view = PermissionSimple::factory('view');
-        $edit = PermissionSimple::factory('edit');
-        $publish = PermissionSimple::factory('publish');
+``` php
+<?php
 
-        $acl = new ACL();
-        $acl->addPermission($view);
-        $acl->addPermission($edit);
-        $acl->addPermission($publish);
-        $acl->addResource($newsResource);
-        $acl->addResource($articleResource);
-        $acl->addRole($userRole);
-        $acl->addRole($newsEditorRole);
-        $acl->addRole($articleEditorRole);
-        $acl->addRole($publisherRole, array($userRole, $newsEditorRole, $articleEditorRole));
-        $acl->addACE(new ACEAllow($userRole, $newsResource, $view));
-        $acl->addACE(new ACEAllow($userRole, $articleResource, $view));
-        $acl->addACE(new ACEAllow($newsEditorRole, $newsResource, $edit));
-        $acl->addACE(new ACEAllow($articleEditorRole, $articleResource, $edit));
-        $acl->addACE(new ACEDeny($userRole, $newsResource, $publish));
-        $acl->addACE(new ACEDeny($userRole, $articleResource, $publish));
+$userRole = RoleSimple::factory('user');
+$newsEditorRole = RoleSimple::factory('newsEditor');
+$articleEditorRole = RoleSimple::factory('articleEditor');
+$publisherRole = RoleSimple::factory('publisher');
+$newsResource = ResourceSimple::factory('newsClass');
+$articleResource = ResourceSimple::factory('articleClass');
+$view = PermissionSimple::factory('view');
+$edit = PermissionSimple::factory('edit');
+$publish = PermissionSimple::factory('publish');
 
-        $acl->isAllowed($publisherRole, $newsResource, $publish)
-        // returns false
+$acl = new ACL();
+$acl->addPermission($view);
+$acl->addPermission($edit);
+$acl->addPermission($publish);
+$acl->addResource($newsResource);
+$acl->addResource($articleResource);
+$acl->addRole($userRole);
+$acl->addRole($newsEditorRole);
+$acl->addRole($articleEditorRole);
+$acl->addRole($publisherRole, array($userRole, $newsEditorRole, $articleEditorRole));
+$acl->addACE(new ACEAllow($userRole, $newsResource, $view));
+$acl->addACE(new ACEAllow($userRole, $articleResource, $view));
+$acl->addACE(new ACEAllow($newsEditorRole, $newsResource, $edit));
+$acl->addACE(new ACEAllow($articleEditorRole, $articleResource, $edit));
+$acl->addACE(new ACEDeny($userRole, $newsResource, $publish));
+$acl->addACE(new ACEDeny($userRole, $articleResource, $publish));
 
-        $acl->isAllowed($publisherRole, $articleResource, $publish)
-        // returns false
+$acl->isAllowed($publisherRole, $newsResource, $publish)
+// returns false
 
-        $acl->isAllowed($publisherRole, $newsResource, $edit)
-        // returns true
+$acl->isAllowed($publisherRole, $articleResource, $publish)
+// returns false
 
-        $acl->isAllowed($publisherRole, $articleResource, $edit)
-        // returns true
+$acl->isAllowed($publisherRole, $newsResource, $edit)
+// returns true
+
+$acl->isAllowed($publisherRole, $articleResource, $edit)
+// returns true
+```
 
 ## Debugging ACL ##
 

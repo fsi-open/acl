@@ -6,16 +6,34 @@ use Monolog\Logger;
 
 class ACL implements ACLInterface
 {
+    /**
+     * @var ResourceInterface[]
+     */
     protected $resources = array();
 
+    /**
+     * @var RoleInterface[]
+     */
     protected $roles = array();
 
+    /**
+     * @var PermissionInterface[]
+     */
     protected $permissions = array();
 
+    /**
+     * @var array
+     */
     protected $rolesParents = array();
 
+    /**
+     * @var array
+     */
     protected $resourcesParents = array();
 
+    /**
+     * @var array
+     */
     protected $ACEs = array();
 
     /**
@@ -23,6 +41,9 @@ class ACL implements ACLInterface
      */
     protected $logger;
 
+    /**
+     * {@interitDoc}
+     */
     public function addPermission(PermissionInterface $permission)
     {
         $permissionId = spl_object_hash($permission);
@@ -32,6 +53,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removePermission(PermissionInterface $permission)
     {
         $permissionId = spl_object_hash($permission);
@@ -44,12 +68,18 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function hasPermission(PermissionInterface $permission)
     {
         $permissionId = spl_object_hash($permission);
         return isset($this->permissions[$permissionId]);
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function addRole(RoleInterface $role, array $parentRoles = array())
     {
         $roleId = spl_object_hash($role);
@@ -65,6 +95,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeRole(RoleInterface $role)
     {
         $roleId = spl_object_hash($role);
@@ -76,12 +109,18 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function hasRole(RoleInterface $role)
     {
         $roleId = spl_object_hash($role);
         return isset($this->roles[$roleId]);
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function addRoleParent(RoleInterface $role, RoleInterface $parentRole)
     {
         $roleId = spl_object_hash($role);
@@ -92,6 +131,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeRoleParent(RoleInterface $role, RoleInterface $parentRole)
     {
         $roleId = spl_object_hash($role);
@@ -100,6 +142,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeRoleParents(RoleInterface $role)
     {
         $roleId = spl_object_hash($role);
@@ -107,13 +152,19 @@ class ACL implements ACLInterface
         return $this;
     }
 
-    public function hasRoleParent(RoleInterface $role, RoleInterface $parentRole)
+    /**
+     * {@interitDoc}
+     */
+    public function isRoleParent(RoleInterface $role, RoleInterface $parentRole)
     {
         $roleId = spl_object_hash($role);
         $parentRoleId = spl_object_hash($parentRole);
         return isset($this->rolesParents[$roleId][$parentRoleId]);
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getRoleParents(RoleInterface $role)
     {
         $roleId = spl_object_hash($role);
@@ -123,6 +174,9 @@ class ACL implements ACLInterface
             return array();
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getRoleChildren(RoleInterface $parentRole)
     {
         $parentRoleId = spl_object_hash($parentRole);
@@ -133,6 +187,9 @@ class ACL implements ACLInterface
         return $childrenRoles;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getRolesByClass($className)
     {
         $roles = array();
@@ -142,6 +199,9 @@ class ACL implements ACLInterface
         return $roles;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function addResource(ResourceInterface $resource, array $parentResources = array())
     {
         $resourceId = spl_object_hash($resource);
@@ -157,6 +217,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeResource(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
@@ -169,12 +232,18 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function hasResource(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
         return isset($this->resources[$resourceId]);
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function addResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
     {
         $resourceId = spl_object_hash($resource);
@@ -185,6 +254,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
     {
         $resourceId = spl_object_hash($resource);
@@ -193,6 +265,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeResourceParents(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
@@ -200,13 +275,19 @@ class ACL implements ACLInterface
         return $this;
     }
 
-    public function hasResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
+    /**
+     * {@interitDoc}
+     */
+    public function isResourceParent(ResourceInterface $resource, ResourceInterface $parentResource)
     {
         $resourceId = spl_object_hash($resource);
         $parentResourceId = spl_object_hash($parentResource);
         return isset($this->resourcesParents[$resourceId][$parentResourceId]);
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getResourceParents(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
@@ -216,6 +297,9 @@ class ACL implements ACLInterface
             return array();
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getResourceChildren(ResourceInterface $parentResource)
     {
         $parentResourceId = spl_object_hash($parentResource);
@@ -226,6 +310,9 @@ class ACL implements ACLInterface
         return $childrenResource;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function getResourcesByClass($className)
     {
         $resources = array();
@@ -235,6 +322,9 @@ class ACL implements ACLInterface
         return $resources;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function addACE(ACEInterface $ace)
     {
         $role = $ace->getRole();
@@ -269,6 +359,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function removeACE(ACEInterface $ace)
     {
         $role = $ace->getRole();
@@ -284,6 +377,9 @@ class ACL implements ACLInterface
         return $this;
     }
 
+    /**
+     * {@interitDoc}
+     */
     public function hasACE(ACEInterface $ace)
     {
         $role = $ace->getRole();
@@ -345,11 +441,23 @@ class ACL implements ACLInterface
         return false;
     }
 
+    /**
+     * Set logger for this ACL system
+     *
+     * @param Logger $logger
+     * @return ACLInterface
+     */
     public function setLogger(Logger $logger)
     {
         $this->logger = $logger;
+        return $this;
     }
 
+    /**
+     * Return currently set logger for this ACL system.
+     *
+     * @return Logger
+     */
     public function getLogger()
     {
         return $this->logger;
