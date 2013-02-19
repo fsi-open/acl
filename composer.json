@@ -3,6 +3,7 @@
     "type": "library",
     "description": "FSi ACL Component",
     "keywords": ["fsi", "component", "acl"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Lukasz Cybula",
