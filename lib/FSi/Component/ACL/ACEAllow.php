@@ -14,7 +14,7 @@ namespace FSi\Component\ACL;
 class ACEAllow extends ACEAbstract
 {
     /**
-     * This ACE always grants access by returning true
+     * This ACE always grants access by returning true.
      *
      * @param array $params
      * @return bool

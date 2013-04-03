@@ -34,7 +34,7 @@ abstract class ACEAbstract implements ACEInterface
     protected $_options;
 
     /**
-     * Construct new ACE object with specified role, resource and permissions
+     * Construct new ACE object with specified role, resource and permissions.
      *
      * @param RoleInterface $role
      * @param ResourceInterface $resource
@@ -42,12 +42,15 @@ abstract class ACEAbstract implements ACEInterface
      */
     public function __construct(RoleInterface $role = null, ResourceInterface $resource = null, $permissions = null)
     {
-        if (isset($role))
+        if (isset($role)) {
             $this->setRole($role);
-        if (isset($resource))
+        }
+        if (isset($resource)) {
             $this->setResource($resource);
-        if (isset($permissions) && !empty($permissions))
+        }
+        if (isset($permissions) && !empty($permissions)) {
             $this->setPermissions($permissions);
+        }
     }
 
     /**
@@ -73,13 +76,15 @@ abstract class ACEAbstract implements ACEInterface
      */
     public function setPermissions($permissions)
     {
-        if (!is_array($permissions))
+        if (!is_array($permissions)) {
             $permissions = array($permissions);
+        }
         foreach ($permissions as $permission) {
-            if ($permission instanceof PermissionInterface)
+            if ($permission instanceof PermissionInterface) {
                 $this->_permissions[] = $permission;
-            else
+            } else {
                 throw new ACLException('Specified permission object does not implement PermissionInterface');
+            }
         }
         return $this;
     }

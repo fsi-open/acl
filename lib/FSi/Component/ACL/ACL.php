@@ -47,8 +47,9 @@ class ACL implements ACLInterface
     public function addPermission(PermissionInterface $permission)
     {
         $permissionId = spl_object_hash($permission);
-        if (isset($this->permissions[$permissionId]))
+        if (isset($this->permissions[$permissionId])) {
             throw new ACLException('Specified permission is already registered.');
+        }
         $this->permissions[$permissionId] = $permission;
         return $this;
     }
@@ -61,9 +62,11 @@ class ACL implements ACLInterface
         $permissionId = spl_object_hash($permission);
         if (isset($this->permissions[$permissionId])) {
             unset($this->permissions[$permissionId]);
-            foreach ($this->ACEs as $roleId => &$roleACEs)
-                foreach ($roleACEs as $resourceId => &$resourceACEs)
+            foreach ($this->ACEs as $roleId => &$roleACEs) {
+                foreach ($roleACEs as $resourceId => &$resourceACEs) {
                     unset($resourceACEs[$permissionId]);
+                }
+            }
         }
         return $this;
     }
@@ -83,13 +86,15 @@ class ACL implements ACLInterface
     public function addRole(RoleInterface $role, array $parentRoles = array())
     {
         $roleId = spl_object_hash($role);
-        if (isset($this->roles[$roleId]))
+        if (isset($this->roles[$roleId])) {
             throw new ACLException('Specified role is already registered.');
+        }
         $this->roles[$roleId] = $role;
         foreach ($parentRoles as $parentRole) {
             $parentRoleId = spl_object_hash($parentRole);
-            if (!isset($this->roles[$parentRoleId]))
+            if (!isset($this->roles[$parentRoleId])) {
                 throw new ACLException('Detected unregistered role throught inheritance.');
+            }
             $this->rolesParents[$roleId][$parentRoleId] = $parentRole;
         }
         return $this;
@@ -125,8 +130,9 @@ class ACL implements ACLInterface
     {
         $roleId = spl_object_hash($role);
         $parentRoleId = spl_object_hash($parentRole);
-        if (!isset($this->roles[$roleId]) || !isset($this->roles[$parentRoleId]))
+        if (!isset($this->roles[$roleId]) || !isset($this->roles[$parentRoleId])) {
             throw new ACLException('Detected unregistered role throught inheritance.');
+        }
         $this->rolesParents[$roleId][$parentRoleId] = $parentRole;
         return $this;
     }
@@ -168,10 +174,11 @@ class ACL implements ACLInterface
     public function getRoleParents(RoleInterface $role)
     {
         $roleId = spl_object_hash($role);
-        if (isset($this->rolesParents[$roleId]))
+        if (isset($this->rolesParents[$roleId])) {
             return array_values($this->rolesParents[$roleId]);
-        else
+        } else {
             return array();
+        }
     }
 
     /**
@@ -181,9 +188,11 @@ class ACL implements ACLInterface
     {
         $parentRoleId = spl_object_hash($parentRole);
         $childrenRoles = array();
-        foreach ($this->rolesParents as $roleId => $parentRoles)
-            if (isset($parentRoles[$parentRoleId]))
+        foreach ($this->rolesParents as $roleId => $parentRoles) {
+            if (isset($parentRoles[$parentRoleId])) {
                 $childrenRoles[] = $this->roles[$roleId];
+            }
+        }
         return $childrenRoles;
     }
 
@@ -193,9 +202,11 @@ class ACL implements ACLInterface
     public function getRolesByClass($className)
     {
         $roles = array();
-        foreach ($this->roles as $roleId => $role)
-            if (get_class($role) == $className)
+        foreach ($this->roles as $roleId => $role) {
+            if (get_class($role) == $className) {
                 $roles[] = $role;
+            }
+        }
         return $roles;
     }
 
@@ -205,13 +216,15 @@ class ACL implements ACLInterface
     public function addResource(ResourceInterface $resource, array $parentResources = array())
     {
         $resourceId = spl_object_hash($resource);
-        if (isset($this->resources[$resourceId]))
+        if (isset($this->resources[$resourceId])) {
             throw new ACLException('Specified resource is already registered.');
+        }
         $this->resources[$resourceId] = $resource;
         foreach ($parentResources as $parentResource) {
             $parentResourceId = spl_object_hash($parentResource);
-            if (!isset($this->resources[$parentResourceId]))
+            if (!isset($this->resources[$parentResourceId])) {
                 throw new ACLException('Detected unregistered resource throught inheritance.');
+            }
             $this->resourcesParents[$resourceId][$parentResourceId] = $parentResource;
         }
         return $this;
@@ -226,8 +239,9 @@ class ACL implements ACLInterface
         if (isset($this->resources[$resourceId])) {
             unset($this->resources[$resourceId]);
             unset($this->resourcesParents[$resourceId]);
-            foreach ($this->ACEs as $roleId => &$roleACEs)
+            foreach ($this->ACEs as $roleId => &$roleACEs) {
                 unset($roleACEs[$resourceId]);
+            }
         }
         return $this;
     }
@@ -248,8 +262,9 @@ class ACL implements ACLInterface
     {
         $resourceId = spl_object_hash($resource);
         $parentResourceId = spl_object_hash($parentResource);
-        if (!isset($this->resources[$resourceId]) || !isset($this->resources[$parentResourceId]))
+        if (!isset($this->resources[$resourceId]) || !isset($this->resources[$parentResourceId])) {
             throw new ACLException('Detected unregistered resource throught inheritance.');
+        }
         $this->resourcesParents[$resourceId][$parentResourceId] = $parentResource;
         return $this;
     }
@@ -291,10 +306,11 @@ class ACL implements ACLInterface
     public function getResourceParents(ResourceInterface $resource)
     {
         $resourceId = spl_object_hash($resource);
-        if (isset($this->resourcesParents[$resourceId]))
+        if (isset($this->resourcesParents[$resourceId])) {
             return array_values($this->resourcesParents[$resourceId]);
-        else
+        } else {
             return array();
+        }
     }
 
     /**
@@ -304,9 +320,11 @@ class ACL implements ACLInterface
     {
         $parentResourceId = spl_object_hash($parentResource);
         $childrenResources = array();
-        foreach ($this->resourcesParents as $resourceId => $parentResources)
-            if (isset($parentResources[$parentResourceId]))
+        foreach ($this->resourcesParents as $resourceId => $parentResources) {
+            if (isset($parentResources[$parentResourceId])) {
                 $childrenResource[] = $this->resource[$resourceId];
+            }
+        }
         return $childrenResource;
     }
 
@@ -316,9 +334,11 @@ class ACL implements ACLInterface
     public function getResourcesByClass($className)
     {
         $resources = array();
-        foreach ($this->resources as $resourceId => $resource)
-            if (get_class($resource) == $className)
+        foreach ($this->resources as $resourceId => $resource) {
+            if (get_class($resource) == $className) {
                 $resources[] = $resource;
+            }
+        }
         return $resources;
     }
 
@@ -330,30 +350,40 @@ class ACL implements ACLInterface
         $role = $ace->getRole();
         $resource = $ace->getResource();
         $permissions = $ace->getPermissions();
-        if (!isset($role) || !isset($resource) || !isset($permissions) || empty($permissions))
+        if (!isset($role) || !isset($resource) || !isset($permissions) || empty($permissions)) {
             throw new ACLException('Specified ACE is not fully configured');
+        }
         $roleId = spl_object_hash($role);
-        if (!isset($this->roles[$roleId]))
+        if (!isset($this->roles[$roleId])) {
             throw new ACLException('Detected unregistered role throught ACE');
+        }
         $resourceId = spl_object_hash($resource);
-        if (!isset($this->resources[$resourceId]))
+        if (!isset($this->resources[$resourceId])) {
             throw new ACLException('Detected unregistered resource throught ACE.');
-        if (!isset($this->ACEs[$roleId]))
+        }
+        if (!isset($this->ACEs[$roleId])) {
             $this->ACEs[$roleId] = array();
-        if (!isset($this->ACEs[$roleId][$resourceId]))
+        }
+        if (!isset($this->ACEs[$roleId][$resourceId])) {
             $this->ACEs[$roleId][$resourceId] = array();
+        }
         foreach ($permissions as $permission) {
             $permissionId = spl_object_hash($permission);
-            if (!isset($this->permissions[$permissionId]))
+            if (!isset($this->permissions[$permissionId])) {
                 throw new ACLException('Detected unregistered permission throught ACE.');
+            }
             $aceId = spl_object_hash($ace);
-            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]))
+            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId])) {
                 throw new ACLException('Specified ACE is already registered');
-            if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
+            }
+            if (!isset($this->ACEs[$roleId][$resourceId][$permissionId])) {
                 $this->ACEs[$roleId][$resourceId][$permissionId] = array();
-            foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $existingACE)
-                if ($existingACE == $ace)
+            }
+            foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $existingACE) {
+                if ($existingACE == $ace) {
                     continue 2;
+                }
+            }
             $this->ACEs[$roleId][$resourceId][$permissionId][$aceId] = $ace;
         }
         return $this;
@@ -390,8 +420,9 @@ class ACL implements ACLInterface
         $aceId = spl_object_hash($ace);
         foreach ($permissions as $permission) {
             $permissionId = spl_object_hash($permission);
-            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId]))
+            if (isset($this->ACEs[$roleId][$resourceId][$permissionId][$aceId])) {
                 return true;
+            }
         }
         return false;
     }
@@ -415,34 +446,43 @@ class ACL implements ACLInterface
         $roleId = spl_object_hash($role);
         $resourceId = spl_object_hash($resource);
         $permissionId = spl_object_hash($permission);
-        if (isset($this->logger))
-            $this->logger->addRecord(Logger::INFO, sprintf(" Start checking if role %s (class: %s) has permission %s (class: %s) to resource %s (class: %s)",
-                $role,
-                get_class($role),
-                $permission,
-                get_class($permission),
-                $resource,
-                get_class($resource)
-            ), $params);
+        if (isset($this->logger)) {
+            $this->logger->addRecord(Logger::INFO,
+                sprintf(
+                    " Start checking if role %s (class: %s) has permission %s (class: %s) to resource %s (class: %s)",
+                    $role,
+                    get_class($role),
+                    $permission,
+                    get_class($permission),
+                    $resource,
+                    get_class($resource)
+                ),
+                $params
+            );
+        }
 
         $allowed = $this->searchACEs($roleId, $resourceId, $permissionId, $params, 1);
-        if (!isset($allowed))
+        if (!isset($allowed)) {
             $allowed = $this->searchParentResourceACEs($roleId, $resourceId, $permissionId, $params, 1);
-        if (!isset($allowed))
+        }
+        if (!isset($allowed)) {
             $allowed = $this->searchParentRoleACEs($roleId, $resourceId, $permissionId, $params, 1);
-        if (isset($allowed))
+        }
+        if (isset($allowed)) {
             return $allowed;
-        if (isset($this->logger))
+        }
+        if (isset($this->logger)) {
             $this->logger->addRecord(Logger::INFO, sprintf(" Access denied because no ACE has taken any decision",
                 $role,
                 $permission,
                 $resource
             ));
+        }
         return false;
     }
 
     /**
-     * Set logger for this ACL system
+     * Set logger for this ACL system.
      *
      * @param Logger $logger
      * @return ACLInterface
@@ -480,21 +520,25 @@ class ACL implements ACLInterface
     {
         $allowedAny = null;
         if (isset($this->rolesParents[$roleId]) && isset($this->resources[$resourceId]) && isset($this->permissions[$permissionId])) {
-            if (isset($this->logger))
+            if (isset($this->logger)) {
                 $this->logger->addRecord(Logger::DEBUG, sprintf("%sChecking if any parent role has specified permission to specified resource",
                     str_repeat('  ', $level)
                 ));
+            }
             foreach ($this->rolesParents[$roleId] as $parentRoleId => $parentRole) {
                 $allowed = $this->searchACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
-                if (!isset($allowed))
+                if (!isset($allowed)) {
                     $allowed = $this->searchParentResourceACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
-                if (!isset($allowed))
+                }
+                if (!isset($allowed)) {
                     $allowed = $this->searchParentRoleACEs($parentRoleId, $resourceId, $permissionId, $params, $level + 1);
+                }
                 if (isset($allowed)) {
-                    if (!$allowed)
+                    if (!$allowed) {
                         return $allowed;
-                    else
+                    } else {
                         $allowedAny = true;
+                    }
                 }
             }
         }
@@ -518,19 +562,22 @@ class ACL implements ACLInterface
     {
         $allowedAny = null;
         if (isset($this->resourcesParents[$resourceId]) && isset($this->roles[$roleId]) && isset($this->permissions[$permissionId])) {
-            if (isset($this->logger))
+            if (isset($this->logger)) {
                 $this->logger->addRecord(Logger::DEBUG, sprintf("%sChecking if specified role has specified permission to any parent resource",
                     str_repeat('  ', $level)
                 ));
+            }
             foreach ($this->resourcesParents[$resourceId] as $parentResourceId => $parentResource) {
                 $allowed = $this->searchACEs($roleId, $parentResourceId, $permissionId, $params, $level + 1);
-                if (!isset($allowed))
+                if (!isset($allowed)) {
                     $allowed = $this->searchParentResourceACEs($roleId, $parentResourceId, $permissionId, $params, $level + 1);
+                }
                 if (isset($allowed)) {
-                    if (!$allowed)
+                    if (!$allowed) {
                         return $allowed;
-                    else
+                    } else {
                         $allowedAny = true;
+                    }
                 }
             }
         }
@@ -551,9 +598,9 @@ class ACL implements ACLInterface
      */
     protected function searchACEs($roleId, $resourceId, $permissionId, array $params = array(), $level = 0)
     {
-        if (!isset($this->ACEs[$roleId][$resourceId][$permissionId]))
+        if (!isset($this->ACEs[$roleId][$resourceId][$permissionId])) {
             return null;
-        else {
+        } else {
             $allowedAny = null;
             foreach ($this->ACEs[$roleId][$resourceId][$permissionId] as $ace) {
                 $allowed = $ace->isAllowed($params);
@@ -571,14 +618,14 @@ class ACL implements ACLInterface
                     ));
                 }
                 if (isset($allowed)) {
-                    if (!$allowed)
+                    if (!$allowed) {
                         return false;
-                    else
+                    } else {
                         $allowedAny = true;
+                    }
                 }
             }
             return $allowedAny;
         }
     }
-
 }

@@ -14,7 +14,7 @@ namespace FSi\Component\ACL;
 class ACEDeny extends ACEAbstract
 {
     /**
-     * This ACE always revokes access by returning false
+     * This ACE always revokes access by returning false.
      *
      * @param array $params
      * @return bool

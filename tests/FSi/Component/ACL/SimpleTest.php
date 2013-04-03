@@ -204,5 +204,4 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
             $acl->isAllowed($publisherRole, $articleResource, $edit)
         );
     }
-
 }
