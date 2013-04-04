@@ -42,6 +42,14 @@ class ACL implements ACLInterface
     protected $logger;
 
     /**
+     * @param Logger $logger
+     */
+    public function __construct(Logger $logger = null)
+    {
+        $this->setLogger($logger);
+    }
+
+    /**
      * {@interitDoc}
      */
     public function addPermission(PermissionInterface $permission)
@@ -487,7 +495,7 @@ class ACL implements ACLInterface
      * @param Logger $logger
      * @return ACLInterface
      */
-    public function setLogger(Logger $logger)
+    public function setLogger(Logger $logger = null)
     {
         $this->logger = $logger;
         return $this;
