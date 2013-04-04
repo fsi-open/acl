@@ -242,5 +242,4 @@ interface ACLInterface
      * @return bool
      */
     public function isAllowed(RoleInterface $role, ResourceInterface $resource, PermissionInterface $permission, array $params = array());
-
 }
