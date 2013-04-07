@@ -458,11 +458,11 @@ class ACL implements ACLInterface
             $this->logger->addRecord(Logger::INFO,
                 sprintf(
                     " Start checking if role %s (class: %s) has permission %s (class: %s) to resource %s (class: %s)",
-                    $role,
+                    $this->stringify($role),
                     get_class($role),
-                    $permission,
+                    $this->stringify($permission),
                     get_class($permission),
-                    $resource,
+                    $this->stringify($resource),
                     get_class($resource)
                 ),
                 $params
@@ -481,9 +481,9 @@ class ACL implements ACLInterface
         }
         if (isset($this->logger)) {
             $this->logger->addRecord(Logger::INFO, sprintf(" Access denied because no ACE has taken any decision",
-                $role,
-                $permission,
-                $resource
+                $this->stringify($role),
+                $this->stringify($permission),
+                $this->stringify($resource)
             ));
         }
         return false;
@@ -617,11 +617,11 @@ class ACL implements ACLInterface
                         str_repeat('  ', $level),
                         isset($allowed)?($allowed?'Access granted by':'Access denied by'):'No decision from',
                         $ace,
-                        $ace->getResource(),
+                        $this->stringify($ace->getResource()),
                         get_class($ace->getResource()),
-                        $ace->getRole(),
+                        $this->stringify($ace->getRole()),
                         get_class($ace->getRole()),
-                        $this->permissions[$permissionId],
+                        $this->stringify($this->permissions[$permissionId]),
                         get_class($this->permissions[$permissionId])
                     ));
                 }
@@ -634,6 +634,25 @@ class ACL implements ACLInterface
                 }
             }
             return $allowedAny;
+        }
+    }
+
+    /**
+     * Get string representation of given object.
+     *
+     * @param mixed $object
+     * @return string
+     */
+    private function stringify($object)
+    {
+        if (!is_object($object)) {
+            return (string) $object;
+        }
+
+        if (method_exists($object, '__toString')) {
+            return (string) $object;
+        } else {
+            return get_class($object);
         }
     }
 }
