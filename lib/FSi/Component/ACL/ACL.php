@@ -640,15 +640,11 @@ class ACL implements ACLInterface
     /**
      * Get string representation of given object.
      *
-     * @param mixed $object
+     * @param object $object
      * @return string
      */
     private function stringify($object)
     {
-        if (!is_object($object)) {
-            return (string) $object;
-        }
-
         if (method_exists($object, '__toString')) {
             return (string) $object;
         } else {
