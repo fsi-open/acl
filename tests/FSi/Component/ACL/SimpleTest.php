@@ -204,4 +204,70 @@ class SimpleTest extends \PHPUnit_Framework_TestCase
             $acl->isAllowed($publisherRole, $articleResource, $edit)
         );
     }
+
+    public function testLogger()
+    {
+        $logger = $this
+            ->getMockBuilder('Monolog\Logger')
+            ->disableOriginalConstructor()
+            ->getMock()
+        ;
+        $logger2 = clone($logger);
+
+        $acl = new ACL($logger);
+        $this->assertSame($acl->getLogger(), $logger);
+        $acl->setLogger($logger2);
+        $this->assertSame($acl->getLogger(), $logger2);
+        $acl->setLogger();
+        $this->assertSame($acl->getLogger(), null);
+
+        $acl2 = new ACL();
+        $this->assertSame($acl2->getLogger(), null);
+    }
+
+    public function testObjects()
+    {
+        $userRole = new Fixtures\Role();
+        $newsEditorRole = new Fixtures\Role();
+        $articleEditorRole = new Fixtures\Role();
+        $publisherRole = new Fixtures\Role();
+        $newsResource = new Fixtures\Resource();
+        $articleResource = new Fixtures\Resource();
+        $view = PermissionSimple::factory('view');
+        $edit = PermissionSimple::factory('edit');
+        $publish = PermissionSimple::factory('publish');
+
+        $acl = $this->getACL();
+        $acl->addPermission($view);
+        $acl->addPermission($edit);
+        $acl->addPermission($publish);
+        $acl->addResource($newsResource);
+        $acl->addResource($articleResource);
+        $acl->addRole($userRole);
+        $acl->addRole($newsEditorRole);
+        $acl->addRole($articleEditorRole);
+        $acl->addRole($publisherRole, array($newsEditorRole, $articleEditorRole, $userRole));
+        $acl->addACE(new ACEAllow($userRole, $newsResource, $view));
+        $acl->addACE(new ACEAllow($userRole, $articleResource, $view));
+        $acl->addACE(new ACEAllow($newsEditorRole, $newsResource, $edit));
+        $acl->addACE(new ACEAllow($articleEditorRole, $articleResource, $edit));
+        $acl->addACE(new ACEDeny($userRole, $newsResource, $publish));
+        $acl->addACE(new ACEDeny($userRole, $articleResource, $publish));
+
+        $this->assertFalse(
+            $acl->isAllowed($publisherRole, $newsResource, $publish)
+        );
+
+        $this->assertFalse(
+            $acl->isAllowed($publisherRole, $articleResource, $publish)
+        );
+
+        $this->assertTrue(
+            $acl->isAllowed($publisherRole, $newsResource, $edit)
+        );
+
+        $this->assertTrue(
+            $acl->isAllowed($publisherRole, $articleResource, $edit)
+        );
+    }
 }
