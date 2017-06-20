@@ -1,3 +1,7 @@
+# THIS PACKAGE IS DEPRECATED
+
+Do not use this package, as it will not receive any updates and may be deleted in the future.
+
 # ACL - Comprehensive Access Control List system for PHP #
 
 FSi ACL component is a set of interfaces and classes which allows management of Access Control List in PHP. It's based on
